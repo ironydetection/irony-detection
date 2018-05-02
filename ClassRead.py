@@ -184,7 +184,7 @@ class Reader:
 
         # sg: CBOW if 0, skip-gram if 1
         # window: number of words accounted for each context( if the window size is 3, 3 word in the left neighorhood and 3 word in the right neighborhood are considered)
-        model = Word2Vec(sentences=self.words_of_tweets, size=300, sg=1, window=3, min_count=1, iter=10, workers=Pool()._processes)
+        model = Word2Vec(sentences=self.words_of_tweets, size=7992, sg=1, window=3, min_count=1, iter=10, workers=Pool()._processes)
 
         # iterator returned over all documents
 #        it = LabeledLineSentence(self.words_of_tweets, self.train_A['label'])
@@ -192,8 +192,10 @@ class Reader:
 #        self.encoded_tweets = model.build_vocab(it)
 
         model.init_sims(replace=True)  # To make the model memory efficient
-        model.most_similar('word')
-#        print(self.encoded_tweets)
+        print(model.most_similar('word'))
+        print(model.wv.syn0.shape)
+
+        #        print(self.encoded_tweets)
 
         # Save model locally to reduce time of training the model again
         #model.save('word2vec_model')
@@ -203,9 +205,15 @@ class Reader:
         #for epoch in range(10):
             #model.train(self.words_of_tweets.sentences_perm())
 
-        num_features = 300  # Word vector dimensionality
+        num_features = 7992  # Word vector dimensionality
 
-        self.encoded_tweets = self.getAvgFeatureVecs(self.words_of_tweets, model, num_features)
+        #self.encoded_tweets = model.wv
+       # print(self.encoded_tweets)
+        from w2v_cal import get_doc_matrix
+        self.encoded_tweets = get_doc_matrix(model, self.words_of_tweets)
+        print(self.encoded_tweets)
+
+        #self.encoded_tweets = self.getAvgFeatureVecs(self.words_of_tweets, model, num_features)
 
 
 

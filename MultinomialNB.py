@@ -34,7 +34,9 @@ def Multinomial_NB(train_A, encoded_tweets):
         from sklearn.naive_bayes import MultinomialNB
         model = MultinomialNB()
 #### NOT NECESSARY
-        print(x_train)
+        print(np.isnan(x_train).any())
+        print(np.where(np.isnan(x_train)))
+        #np.nan_to_num(X) # you replace nan with zero and inf with finite numbers
 ####
         # Fit Multinomial Naive Bayes according to x, y
         # Make a prediction using the Multinomial Naive Bayes Model
