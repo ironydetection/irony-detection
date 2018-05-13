@@ -1,33 +1,17 @@
 import os.path
-import re
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-import keras
 from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.text import one_hot
-from keras.preprocessing.text import text_to_word_sequence
-import nltk
 from nltk.util import ngrams
 import gensim
 
-class LabeledLineSentence(object):
-    def __init__(self, doc_list, labels_list):
-        self.labels_list = labels_list
-        self.doc_list = doc_list
-    def __iter__(self):
-        for idx, doc in enumerate(self.doc_list):
-              yield gensim.models.doc2vec.LabeledSentence(doc, [self.labels_list[idx]])
 
 
 class Reader:
 
     dir = os.getcwd() # Gets the current working directory
 
-    encoded_tweets = [] # Different encoding of tweets (One Hot Encoding, TF-IDF, One hot encoding of ngrams)
-    word_dict = []  # Dictionary of all the words that exist
     words_of_tweets = [] # Saves all the tweet cleared from stop-words, stemmed and tokenized
-    bigrams = [] # Bi-grams of all tweets
 
     train_A = None
     train_A_emoji = None
@@ -54,10 +38,6 @@ class Reader:
     # Pre-processing of the tweets
     def pre_processing(self):
         for i in range(0, len(self.train_A)):
-            # Estimate the size of the vocabulary
-            #words = set(text_to_word_sequence(self.train_A.iloc[i][2], filters='!"$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n'))
-
-    ##        print("printing words: ", words)
 
             # Tokenize tweets
             from nltk.tokenize import word_tokenize
@@ -85,190 +65,256 @@ class Reader:
             self.words_of_tweets.append(words)
 
 
+###############################################################################################################################################
+###############################################################################################################################################
+
+    # Select the proper encoding
+    def get_enc(self, x_enc):
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# TF-IDF
+        encoded_tweets = self.tf_idf(x_enc)
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# One hot encoding
+#        encoded_tweets = self.one_hot_enc(x_enc)
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Bi-grams
+#        encoded_tweets = self.bigrams_enc(x_enc)
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Word2Vec
+#        encoded_tweets = self.Word2Vec_enc(x_enc)
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Doc2Vec
+#        encoded_tweets = self.Doc2Vec_enc(x_enc)
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# GloVe
+#        encoded_tweets = self.GloVe_enc(x_enc)
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        print(encoded_tweets)
+        return encoded_tweets
+
+###############################################################################################################################################
+###############################################################################################################################################
+
 
     # Create a dictionary for one hot encoding and encode with one hot encoding
-    def one_hot_enc(self):
-        # Create a dictionary from all the words that exist in tweets
-        for i in range(0, len(self.train_A)):
-            for j in range(0, len(self.words_of_tweets[i])):
-                if self.words_of_tweets[i][j] not in self.word_dict:
-                    self.word_dict.append(self.words_of_tweets[i][j])
+    def one_hot_enc(self, x_enc):
+        word_dict = []  # Dictionary of all the words that exist
 
-        tweets_size = len(self.train_A)  # Rows of the array encoded_tweets
-        vocab_size = len(self.word_dict)  # Columns of the array encoded_tweets
+        # Create a dictionary from all the words that exist in tweets
+        print(len(x_enc))
+        for i in range(0, len(x_enc)):
+            for j in range(0, len(x_enc[i])):
+                if x_enc[i][j] not in word_dict:
+                    word_dict.append(x_enc[i][j])
+
+        tweets_size = len(x_enc)  # Rows of the array encoded_tweets
+        vocab_size = len(word_dict)  # Columns of the array encoded_tweets
 
         # Creates a list with rows representing tweets and sized as 'tweets_size' and columns representing unique vocabulary of tweets and sized as 'vocab_size', all set to 0
-        self.encoded_tweets = [[0 for x in range(vocab_size)] for y in range(tweets_size)]
+        encoded_tweets = [[0 for x in range(vocab_size)] for y in range(tweets_size)]
 
         # Set 1 to the encoded_tweets list on the indexes that the words of a specific tweet matches the words of the dictionary
         for y in range(0, tweets_size):
             for x in range(0, vocab_size):
-                for a in range(0, len(self.words_of_tweets[y])):
-                    # print("len of words: ", tweets_size)
-                    if self.words_of_tweets[y][a] == self.word_dict[x]:
-                        ##print("got another: ", y, "from: ", tweets_size)
-                        self.encoded_tweets[y][x] = 1
+                for a in range(0, len(x_enc[y])):
+                    if x_enc[y][a] == word_dict[x]:
+                        encoded_tweets[y][x] = 1
 
+        return encoded_tweets
+
+
+###############################################################################################################################################
+###############################################################################################################################################
 
 
     # TF-IDF and statistics
-    def tf_idf(self):
+    def tf_idf(self, x_enc):
         # Create the tokenizer used for TF-IDF
         t = Tokenizer()
 
         # fit the tokenizer on the documents
-        t.fit_on_texts(self.words_of_tweets)
+        t.fit_on_texts(x_enc)
 
         # summarize what was learned
-        print(t.word_counts) # A dictionary of words and their counts
+#        print(t.word_counts) # A dictionary of words and their counts
         # print(t.word_docs) # Similar to word_counts - output structure is changed. An integer count of the total number of documents that were used to fit the Tokenizer
         # print(t.document_count) # A dictionary of words and how many documents each appeared in
         # print(t.word_index) # A dictionary of words and their uniquely assigned integers
 
         # integer encode documents using TF-IDF
-        self.encoded_tweets = t.texts_to_matrix(self.words_of_tweets, mode='tfidf')
-        print(self.encoded_tweets)
+        encoded_tweets = t.texts_to_matrix(x_enc, mode='tfidf')
+#        print(encoded_tweets)
+        print(encoded_tweets.shape)
+        return encoded_tweets
 
 
+###############################################################################################################################################
+###############################################################################################################################################
 
-    def bigrams_enc(self):
+
+    def bigrams_enc(self, x_enc):
+        bigrams = []  # Bi-grams of all tweets
+
         # Use the pre-processing done above
-        for y in range(0, len(self.words_of_tweets)):
-            self.bigrams.append(list(ngrams(self.words_of_tweets[y], 2)))
-        #        for y in range(0, len(self.bigrams)):
-        #            print(self.bigrams[y])
+        for y in range(0, len(x_enc)):
+            bigrams.append(list(ngrams(x_enc[y], 2)))
+        #for y in range(0, len(self.bigrams)):
+        #    print(self.bigrams[y])
 
         diction = []  # The dictionary of bigrams
 
-        tweets_size = len(self.train_A)  # Rows of the array
+        tweets_size = len(x_enc)  # Rows of the array
 
         # Create the dictionary of bigrams
         for i in range(0, tweets_size):
-            for j in range(0, len(self.bigrams[i])):
-                if self.bigrams[i][j] not in diction:
-                    diction.append(self.bigrams[i][j])
-        print(diction)
+            for j in range(0, len(bigrams[i])):
+                if bigrams[i][j] not in diction:
+                    diction.append(bigrams[i][j])
+#        print(diction)
 
         vocab_size = len(diction)  # Columns of the array
 
         # Use One Hot Encoding on the created bigrams
         # Creates a list with rows representing tweets and sized as 'tweets_size' and columns representing unique vocabulary of tweets and sized as 'vocab_size', all set to 0
-        self.encoded_tweets = [[0 for x in range(vocab_size)] for y in range(tweets_size)]
+        encoded_tweets = [[0 for x in range(vocab_size)] for y in range(tweets_size)]
 
         # Set 1 to the ngram list on the indexes that the words of a specific tweet matches the words of the dictionary
         for y in range(0, tweets_size):
             for x in range(0, vocab_size):
-                for a in range(0, len(self.bigrams[y])):
+                for a in range(0, len(bigrams[y])):
                     # print("len of words: ", tweets_size)
-                    if self.bigrams[y][a] == diction[x]:
+                    if bigrams[y][a] == diction[x]:
                         ##print("got another: ", y, "from: ", tweets_size)
-                        self.encoded_tweets[y][x] = 1
+                        encoded_tweets[y][x] = 1
 
         # for y in range(0, tweets_size):
-        # print(self.encoded_tweets[y])
+        # print(encoded_tweets[y])
 
         # CHECK THAT THE ENCODING IS INDEED CORRECT
-        for i in range(0, len(self.encoded_tweets[12])):
-            if self.encoded_tweets[12][i] == 1:
-                print("Diction 12: ", diction[i])
-        print("Bigram encod 12: ", self.encoded_tweets[12])
+#        for i in range(0, len(encoded_tweets[12])):
+#            if encoded_tweets[12][i] == 1:
+#                print("Diction 12: ", diction[i])
+#        print("Bigram encod 12: ", encoded_tweets[12])
+
+        return encoded_tweets
 
 
 ###############################################################################################################################################
 ###############################################################################################################################################
 
 
-    def Word2Vec_enc(self):
+    def Word2Vec_enc(self, x_enc):
         from gensim.models import Word2Vec
-        from multiprocessing import Pool
+
+        encoded_tweets = self.labelizeTweets(x_enc, 'TRAIN')
+        print(encoded_tweets[0])
 
         # sg: CBOW if 0, skip-gram if 1
+        # ‘min_count’ is for neglecting infrequent words.
+        # negative (int) – If > 0, negative sampling will be used, the int for negative specifies how many “noise words” should be drawn (usually between 5-20). If set to 0, no negative sampling is used.
         # window: number of words accounted for each context( if the window size is 3, 3 word in the left neighorhood and 3 word in the right neighborhood are considered)
-        model = Word2Vec(sentences=self.words_of_tweets, size=7992, sg=1, window=3, min_count=1, iter=10, workers=Pool()._processes)
+        model = Word2Vec(size=7992, min_count=0)
+        model.build_vocab([x.words for x in encoded_tweets])
+#        model.init_sims(replace=True)  # To make the model memory efficient
+        # total_examples (int) – Count of sentences.
+        print("This is the length of encoded_tweets: ", len(encoded_tweets))
+        model.train([x.words for x in encoded_tweets], total_examples=len(encoded_tweets), epochs=10)
 
-        # iterator returned over all documents
-#        it = LabeledLineSentence(self.words_of_tweets, self.train_A['label'])
-#        model = Word2Vec(size=300, sg=1, window=3, min_count=1, iter=10, workers=Pool()._processes)
-#        self.encoded_tweets = model.build_vocab(it)
 
-        model.init_sims(replace=True)  # To make the model memory efficient
-        print(model.most_similar('word'))
+#        print(model.most_similar('woman'))
         print(model.wv.syn0.shape)
 
-        #        print(self.encoded_tweets)
 
         # Save model locally to reduce time of training the model again
         #model.save('word2vec_model')
         #model = Word2Vec.load('word2vec_model')
 
-        # Training Doc2Vec
-        #for epoch in range(10):
-            #model.train(self.words_of_tweets.sentences_perm())
+        from sklearn.feature_extraction.text import TfidfVectorizer
 
-        num_features = 7992  # Word vector dimensionality
+        print('building tf-idf matrix ...')
+        # min_df : float in range [0.0, 1.0] or int, default=1
+        # When building the vocabulary ignore terms that have a document frequency strictly lower than the given threshold.
+        # This value is also called cut-off in the literature. If float, the parameter represents a proportion of documents,
+        # integer absolute counts. This parameter is ignored if vocabulary is not None.
+        vectorizer = TfidfVectorizer(analyzer=lambda x: x, min_df=7)
+        matrix = vectorizer.fit_transform([x.words for x in encoded_tweets])
+        tfidf = dict(zip(vectorizer.get_feature_names(), vectorizer.idf_))
+        print('vocab size :', len(tfidf))
 
-        #self.encoded_tweets = model.wv
-       # print(self.encoded_tweets)
-        from w2v_cal import get_doc_matrix
-        self.encoded_tweets = get_doc_matrix(model, self.words_of_tweets)
-        print(self.encoded_tweets)
+        from sklearn.preprocessing import scale
+        train_vecs_w2v = np.concatenate([self.buildWordVector(model, z, 7992, tfidf) for z in map(lambda x: x.words, encoded_tweets)])
+        encoded_tweets = scale(train_vecs_w2v)
 
-        #self.encoded_tweets = self.getAvgFeatureVecs(self.words_of_tweets, model, num_features)
+        return encoded_tweets
 
 
 
+    def buildWordVector(self, model, tokens, size, tfidf):
+        vec = np.zeros(size).reshape((1, size))
+        count = 0.
+        for word in tokens:
+            try:
+                vec += model[word].reshape((1, size)) * tfidf[word]
+                count += 1.
+            except KeyError:  # handling the case where the token is not
+                # in the corpus. useful for testing.
+                continue
+        if count != 0:
+            vec /= count
+        return vec
 
-    # Function for calculating the average feature vector
-    def getAvgFeatureVecs(self, reviews, model, num_features):
-        counter = 0
-        reviewFeatureVecs = np.zeros((len(reviews), num_features), dtype="float32")
-        for review in reviews:
-            # Printing a status message every 1000th review
-            if counter % 1000 == 0:
-                print("Review %d of %d" % (counter, len(reviews)))
 
-            reviewFeatureVecs[counter] = self.featureVecMethod(review, model, num_features)
-            counter = counter + 1
 
-        return reviewFeatureVecs
+    def labelizeTweets(self, tweets, label_type):
+        LabeledSentence = gensim.models.doc2vec.LabeledSentence
 
-    # Function to average all word vectors in a paragraph
-    def featureVecMethod(self, words, model, num_features):
-        # Pre-initialising empty numpy array for speed
-        featureVec = np.zeros(num_features, dtype="float32")
-        nwords = 0
-
-        # Converting Index2Word which is a list to a set for better speed in the execution.
-        index2word_set = set(model.wv.index2word)
-
-        for word in words:
-            if word in index2word_set:
-                nwords = nwords + 1
-                featureVec = np.add(featureVec, model[word])
-
-        # Dividing the result by number of words to get average
-        featureVec = np.divide(featureVec, nwords)
-        return featureVec
-
+        labelized = []
+        for i, v in enumerate(tweets):
+            label = '%s_%s' % (label_type, i)
+            labelized.append(LabeledSentence(v, [label]))
+        return labelized
 
 ###############################################################################################################################################
 ###############################################################################################################################################
 
 
-    def Doc2Vec_enc(self):
+    def Doc2Vec_enc(self, x_enc):
         from gensim.models import Doc2Vec
-        from multiprocessing import Pool
+
+        encoded_tweets = self.labelizeTweets(x_enc, 'TRAIN')
 
         # dm: DBOW if 0, distributed-memory if 1
         # window: number of words accounted for each context( if the window size is 3, 3 word in the left neighorhood and 3 word in the right neighborhood are considered)
-        model = Doc2Vec(documents=self.words_of_tweets, dm=1, size=100, window=3, min_count=1, iter=10, workers=Pool()._processes)
-        model.init_sims(replace=True)
-        model.build_vocab(self.words_of_tweets)
+#        model = Doc2Vec(documents=x_enc, dm=1, size=100, window=3, min_count=1, iter=10, workers=Pool()._processes)
+        model = Doc2Vec(vector_size=7992, min_count=0)
+#        model.init_sims(replace=True)
 
-        # Training Doc2Vec
-        #for epoch in range(10):
-            #model.train(self.words_of_tweets.sentences_perm())
+        from sklearn import utils
 
+        model.build_vocab([x for x in encoded_tweets])
+        model.train(utils.shuffle([x for x in encoded_tweets]), total_examples=len(encoded_tweets), epochs=10)
+
+        # printing the vector of document at index 1 in docLabels
+        print(model.docvecs[len(x_enc)-1])
+        print(model['TRAIN_0'])
+
+        #for docvec in model.docvecs:
+            #encoded_tweets = docvec
+            #print(encoded_tweets)
+
+        print(len(x_enc))
+        for i in range(0, len(x_enc)):
+            prefix_train_pos = 'TRAIN_' + str(i)
+            encoded_tweets[i] = model.docvecs[prefix_train_pos]
+
+        print(encoded_tweets)
+        return encoded_tweets
 
 
 
@@ -276,18 +322,22 @@ class Reader:
 ###############################################################################################################################################
 
 
-    def GloVe_enc(self):
+    def GloVe_enc(self, x_enc):
         from glove import Corpus, Glove
         from multiprocessing import Pool
 
+        encoded_tweets = []  # Different encoding of tweets (One Hot Encoding, TF-IDF, One hot encoding of ngrams)
+
         corpus = Corpus()
-        corpus.fit(self.words_of_tweets, window=3)  # window parameter denotes the distance of context
+        corpus.fit(x_enc, window=3)  # window parameter denotes the distance of context
         glove = Glove(no_components=100, learning_rate=0.05)
 
         # matrix: co - occurence matrix of the corpus
         # no_threads: number of training threads
         glove.fit(matrix=corpus.matrix, epochs=30, no_threads=Pool()._processes, verbose=True)
         glove.add_dictionary(corpus.dictionary)  # supply a word-id dictionary to allow similarity queries
+
+        return encoded_tweets
 
 
 
@@ -320,37 +370,17 @@ class Reader:
         self.train_A['tweet'] = self.train_A['tweet'].str.replace(r'@\S+', '', case=False) # Delete Usernames
         self.train_A['tweet'] = self.train_A['tweet'].str.replace(r'#', ' ', case=False)  # Replace hashtags with space to deal with the case where the tweet appears to be one word but is consisted by more seperated from hashtags
 
-##        print('Average number of words per sentence: ', np.mean([len(s.split(" ")) for s in self.train_A.tweet]))
+#        print('Average number of words per sentence: ', np.mean([len(s.split(" ")) for s in self.train_A.tweet]))
+
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Pre-processing
         self.pre_processing()
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# TF-IDF
-#        self.tf_idf()
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# One hot encoding
-#        self.one_hot_enc()
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Bi-grams
-#        self.bigrams_enc()
 
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Word2Vec
-        self.Word2Vec_enc()
-
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Doc2Vec
-#        self.Doc2Vec_enc()
-
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# GloVe
-#        self.GloVe_enc()
-
-# ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
         '''
