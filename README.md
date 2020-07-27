@@ -1,5 +1,8 @@
 # Extracting customer feedback from social networks - Irony detection in tweets
 
+## Thesis Description
+Extensive study of machine learning algorithms and data mining methods in view of detecting ironic text excerpts. The code is in Python and it features Data Cleaning, Natural language processing, Feature Engineering (extraction-selection), Machine Learning, Data Visualization, Deep learning (Tensorflow), and Dimensionality reduction.
+
 ## Backend
 Tensorflow (optionally - with GPU support)
 
