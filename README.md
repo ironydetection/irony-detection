@@ -3,6 +3,8 @@
 ## Thesis Description
 Extensive study of machine learning algorithms and data mining methods in view of detecting ironic text excerpts. The code is in Python and it features Data Cleaning, Natural language processing, Feature Engineering (extraction-selection), Machine Learning, Data Visualization, Deep learning (Tensorflow), and Dimensionality reduction.
 
+----------------------------------------------------------------------------------------------------------------------------------------
+
 ## Backend
 Tensorflow (optionally - with GPU support)
 
@@ -27,7 +29,7 @@ Tensorflow (optionally - with GPU support)
 ----------------------------------------------------------------------------------------------------------------------------------------
 
   ## How to run the program
-  There are two versions of each file, except from files ‘EmoticonDetector.py’ and ‘Feature_Extraction.py’. The first version implements the development state models, in which 10-fold-cross-validation is applied, while the second version implements the final predicting models that are trained in the whole dataset in order to predict the label on the gold set. The second version files have the prefix ‘FINAL’ followed by the name of the corresponding file of the first version. An example of a first version file is ‘VotingEnsembles’, while the corresponding second version file is named as ‘Final_VotingEnsembles’.
+  There are two versions of each file, except from files ‘EmoticonDetector.py’ and ‘Feature_Extraction.py’. The first version implements the development stage models, in which 10-fold-cross-validation is applied, while the second version implements the final predicting models that are trained in the whole dataset in order to predict the label on the gold set. The second version files have the prefix ‘FINAL’ followed by the name of the corresponding file of the first version. An example of a first version file is ‘VotingEnsembles’, while the corresponding second version file is named as ‘Final_VotingEnsembles’.
   
 ----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -52,7 +54,7 @@ PCA | 9
 Truncated SVD | 10
 Feature Importance | 11  
 
-  **Για να τρέξει το πρόγραμμα στην πρώτη εκδοχή, πρέπει στο path του project να υπάρχουν 10 φάκελοι οι οποίοι χρησιμοποιούνται για την αποθήκευση των αποτελεσμάτων που παράγει ο κάθε αλγόριθμος. Τα ονόματα των φακέλων που απαιτούνται παρουσιάζονται παρακάτω και αντιστοιχούν ένας φάκελος για κάθε αλγόριθμο μηχανικής μάθησης που χρησιμοποιείται. Τα ονόματα των φακέλων αναγράφονται και στη main.py στο έκτο όρισμα, όπου μπορούν και να αλλαχτούν. Οι φάκελοι δεν είναι απαραίτητο να περιέχουν κάτι, αφού τα αρχεία που θα αποθηκευτούν τα αποτελέσματα δημιουργούνται αυτόματα.**
+  **To run the models of the development stage (first file version), it is mandatory to include 10 folders in the project path that will be utilized to save the results produced by each model. The file names are listed below and each folder corresponds to each machine learning algorithm used. Folder names can be changed in the "main.py" file (sixth hyperparameter). Folders can be empty, as the necessary files are created automatically.**
  
 **Necessary folders to run the program**
 1. Bayes
